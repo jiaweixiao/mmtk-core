@@ -1,0 +1,11 @@
+usdt:$MMTK:mmtk:gc_start{
+    if (@stats_enabled) {
+        @gc_pause[tid] = nsecs;
+    }
+}
+
+usdt:$MMTK:mmtk:gc_end{
+    if (@stats_enabled) {
+        @gc_pause_stats = stats((nsecs - @gc_pause[tid])/1000000);
+    }
+}
