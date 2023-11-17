@@ -31,6 +31,11 @@ the work packet, and the second argument is the length of the string.
 - `mmtk:alloc_slow_once_start()`: the allocation slow path starts.
 - `mmtk:alloc_slow_once_end()`: the allocation slow path ends.
 
+## Install bpftrace
+```bash
+sudo apt-get install bpftrace
+```
+
 ## Running tracing tools
 The tracing tools are to be invoked by a wrapper script `run.py`.
 ```
