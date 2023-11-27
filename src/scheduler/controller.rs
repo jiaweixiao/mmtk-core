@@ -9,6 +9,7 @@ use crate::plan::gc_requester::GCRequester;
 use crate::scheduler::gc_work::{EndOfGC, ScheduleCollection};
 use crate::scheduler::{GCWork, WorkBucketStage};
 use crate::util::VMWorkerThread;
+use crate::util::statistics::perf_group;
 use crate::vm::VMBinding;
 use crate::MMTK;
 
@@ -83,7 +84,10 @@ impl<VM: VMBinding> GCController<VM> {
     /// A wrapper method for [`do_gc_until_completion`](GCController::do_gc_until_completion) to insert USDT tracepoints.
     fn do_gc_until_completion_traced(&mut self) {
         probe!(mmtk, gc_start);
+        perf_group::perf_log_register();
+        perf_group::perf_log_start();
         self.do_gc_until_completion();
+        perf_group::perf_log_stop_and_log();
         probe!(mmtk, gc_end);
     }
 
