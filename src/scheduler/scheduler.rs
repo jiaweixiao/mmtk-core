@@ -233,7 +233,7 @@ impl<VM: VMBinding> GCWorkScheduler<VM> {
     /// No workers will be waked up by this function. The caller is responsible for that.
     ///
     /// Return true if there're any non-empty buckets updated.
-    pub(crate) fn update_buckets(&self) -> bool {
+    pub(crate) fn update_buckets(&self, bucket_id: &mut u8) -> bool {
         let mut buckets_updated = false;
         let mut new_packets = false;
         for i in 0..WorkBucketStage::LENGTH {
@@ -246,6 +246,7 @@ impl<VM: VMBinding> GCWorkScheduler<VM> {
             buckets_updated = buckets_updated || bucket_opened;
             if bucket_opened {
                 probe!(mmtk, bucket_opened, id);
+                *bucket_id = i as u8;
                 new_packets = new_packets || !bucket.is_drained();
                 if new_packets {
                     // Quit the loop. There are already new packets in the newly opened buckets.

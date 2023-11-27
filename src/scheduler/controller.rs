@@ -58,22 +58,25 @@ impl<VM: VMBinding> GCController<VM> {
     }
 
     /// Find more work for workers to do.  Return true if more work is available.
-    fn find_more_work_for_workers(&mut self) -> bool {
+    fn find_more_work_for_workers(&mut self, bucket_id: &mut u8) -> bool {
         if self.scheduler.worker_group.has_designated_work() {
+            *bucket_id = 255u8;
             return true;
         }
 
         // See if any bucket has a sentinel.
         if self.scheduler.schedule_sentinels() {
+            *bucket_id = 255u8;
             return true;
         }
 
         // Try to open new buckets.
-        if self.scheduler.update_buckets() {
+        if self.scheduler.update_buckets(bucket_id) {
             return true;
         }
 
         // If all of the above failed, it means GC has finished.
+        *bucket_id = 255u8;
         false
     }
 
@@ -87,6 +90,9 @@ impl<VM: VMBinding> GCController<VM> {
     /// Coordinate workers to perform GC in response to a GC request.
     fn do_gc_until_completion(&mut self) {
         let gc_start = std::time::Instant::now();
+        let mut bucket_start = gc_start.clone();
+        let mut bucket_id : u8 = 255u8;
+        let mut prev_bucket : u8 = 255u8;
 
         debug_assert!(
             self.scheduler.worker_monitor.debug_is_sleeping(),
@@ -106,11 +112,29 @@ impl<VM: VMBinding> GCController<VM> {
             // been drained.
             self.scheduler.assert_all_activated_buckets_are_empty();
 
-            let new_work_available = self.find_more_work_for_workers();
+            let new_work_available = self.find_more_work_for_workers(&mut bucket_id);
 
             // GC finishes if there is no new work to do.
             if !new_work_available {
+                info!(
+                    "Bucket {} took {} ms)",
+                    prev_bucket,
+                    bucket_start.elapsed().as_millis()
+                );
                 break;
+            }
+            // New opened bucket, id is `bucket_id`
+            // id ranges in 0 ..= 15, explained in `enum WorkBucketStage`
+            if bucket_id <= 15 {
+                if prev_bucket <= 15 {
+                    info!(
+                        "Bucket {} took {} ms)",
+                        prev_bucket,
+                        bucket_start.elapsed().as_millis()
+                    );
+                }
+                prev_bucket = bucket_id;
+                bucket_start = std::time::Instant::now();
             }
 
             // Notify all workers because there should be many work packets available in the newly
