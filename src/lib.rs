@@ -30,6 +30,7 @@
 //!   i.e. [the memory manager API](memory_manager/index.html) that allows a language's memory manager to use MMTk
 //!   and [the VMBinding trait](vm/trait.VMBinding.html) that allows MMTk to call the language implementation.
 
+extern crate perf_group_lib;
 extern crate libc;
 extern crate strum_macros;
 #[macro_use]

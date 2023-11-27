@@ -4,6 +4,7 @@
 //! The GC controller thread responds to GC requests and coordinates the workers to perform GC.
 
 use std::sync::Arc;
+use perf_group_lib::measurement_procedures;
 
 use crate::plan::gc_requester::GCRequester;
 use crate::scheduler::gc_work::{EndOfGC, ScheduleCollection};
@@ -11,6 +12,7 @@ use crate::scheduler::{GCWork, WorkBucketStage};
 use crate::util::VMWorkerThread;
 use crate::vm::VMBinding;
 use crate::MMTK;
+
 
 use super::{GCWorkScheduler, GCWorker};
 
