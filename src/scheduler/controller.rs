@@ -84,9 +84,13 @@ impl<VM: VMBinding> GCController<VM> {
     /// A wrapper method for [`do_gc_until_completion`](GCController::do_gc_until_completion) to insert USDT tracepoints.
     fn do_gc_until_completion_traced(&mut self) {
         probe!(mmtk, gc_start);
-        perf_group::perf_log_register();
+        // For safety we always call perf_log_register. It only functions for the first call.
+        // Actually you only need to ensure that perf_log_register is called first before all other actions.
+        perf_group::perf_log_register(); 
+        // Start recording
         perf_group::perf_log_start();
         self.do_gc_until_completion();
+        // End recording and log using info!()
         perf_group::perf_log_stop_and_log();
         probe!(mmtk, gc_end);
     }
